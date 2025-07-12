@@ -1,7 +1,7 @@
 {
     "items": [
         {
-            "name": "Start Kiiin Frame",
+            "name": "Kiiin Frame",
             "action": "/mnt/us/extensions/kiiin_frame/kiiin_frame.sh"
         }
     ]
