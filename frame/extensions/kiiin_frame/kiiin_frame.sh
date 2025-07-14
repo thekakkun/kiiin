@@ -7,7 +7,7 @@ LOG="$DIR/log.txt"
 echo "Launching at $(date)" >"$LOG"
 echo "DIR=$DIR" >>"$LOG"
 
-echo "Stopping Kindle framework" >"$LOG"
+echo "Stopping Kindle framework" >>"$LOG"
 /etc/init.d/framework stop
 
 # shellcheck disable=SC1090
