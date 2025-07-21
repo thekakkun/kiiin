@@ -1,7 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 DIR="$(dirname "$0")"
 ENV_FILE="$DIR/.env"
+LOG="$DIR/log.txt"
+
+exec > >(tee -a "$LOG") 2>&1
 
 # shellcheck disable=SC1090
 if [ -f "$ENV_FILE" ]; then
@@ -14,13 +17,6 @@ fi
 PORT="${PORT:-3000}"
 
 iptables -I INPUT -p tcp --dport "$PORT" -j ACCEPT
-
-if [ "$ISKINDLE4NT" = true ]; then
-    /etc/init.d/framework stop #kindle NT4 code
-else
-    stop framework
-    stop lab126_gui #code for kindle paperwhite3
-fi
 
 initctl stop webreader
 lipc-set-prop com.lab126.powerd preventScreenSaver 1
