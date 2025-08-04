@@ -1,87 +1,125 @@
 extern crate mpd;
 
-use mpd::{Client, Idle};
-use std::env;
+mod music;
+mod template;
+
+use crate::music::mpd;
+use crate::music::{AlbumArt, Song};
+use crate::template::{IndexTemplate, MusicTemplate};
+
+use base64::engine::general_purpose::STANDARD;
+
+use askama::Template;
+use base64::Engine;
+use image::ImageReader;
+use image::imageops::rotate90;
+use reqwest::Client;
+use reqwest::multipart::{Form, Part};
+use std::io::Write;
+use std::path::Path;
+use std::process::Command;
+use tempfile::{Builder, NamedTempFile};
+use tokio::fs::File;
 use tokio::sync::mpsc;
 
+const KINDLE_H: u16 = 1072;
+const KINDLE_W: u16 = 1448;
+
+#[derive(Debug)]
 enum Event {
-    MPD(Song),
+    Music(Option<Song>, Option<AlbumArt>, Option<Song>),
     Weather,
 }
 
-struct Song {
-    title: String,
-    artist: String,
-    album: String,
-    date: String,
-    album_art: Option<Vec<u8>>,
-}
-impl From<mpd::Song> for Song {
-    fn from(value: mpd::Song) -> Self {
-        let mut album = None;
-        let mut date = None;
-        for tag in value.tags.into_iter() {
-            match tag {
-                (name, value) if name == String::from("Album") => album = Some(value),
-                (name, value) if name == String::from("Date") => date = Some(value),
-                _ => {}
-            }
-        }
-        Song {
-            title: value.title.unwrap_or(String::from("Title not found")),
-            artist: value.artist.unwrap_or(String::from("Artist not found")),
-            album: album.unwrap_or(String::from("Title not found")),
-            date: date.unwrap_or(String::from("Title not found")),
-            album_art: None,
-        }
-    }
-}
-
-fn init_mpd() -> Result<Client, &'static str> {
-    let mpd_host_pass = env::var("MPD_HOST").unwrap_or(String::from("localhost"));
-    let mpd_port = env::var("MPD_PORT").unwrap_or(String::from("6600"));
-    let mpd_host: &str;
-    let mpd_pass: Option<&str>;
-
-    if let Some((pass, host)) = mpd_host_pass.split_once('@') {
-        mpd_host = host;
-        mpd_pass = Some(pass);
-    } else {
-        mpd_host = &mpd_host_pass;
-        mpd_pass = None;
-    }
-    let mut client = Client::connect(format!("{mpd_host}:{mpd_port}"))
-        .map_err(|_| "Error connecting to client")?;
-    if let Some(password) = mpd_pass {
-        client
-            .login(password)
-            .map_err(|_| "Could not log in to client")?;
-    }
-
-    Ok(client)
-}
-
-fn mpd(tx: mpsc::Sender<Event>) -> Result<(), &'static str> {
-    let mut client = init_mpd()?;
-    loop {
-        if let Ok(_) = client.wait(&[mpd::Subsystem::Player]) {
-            println!("{:?}", client.currentsong())
-        }
-    }
+fn process_img(path: &Path) {
+    let img = ImageReader::open(path)
+        .unwrap()
+        .decode()
+        .unwrap()
+        .into_luma8();
+    let rotated = rotate90(&img);
+    rotated.save(path).unwrap();
 }
 
 #[tokio::main]
 async fn main() {
     let (tx, mut rx) = mpsc::channel(100);
 
-    tokio::task::spawn_blocking(move || {
-        mpd(tx);
+    tokio::task::spawn_blocking(|| {
+        if let Err(e) = mpd(tx) {
+            eprintln!("MPD error: {}", e);
+        };
     });
+
+    let mut music_html = String::default();
 
     while let Some(event) = rx.recv().await {
         match event {
-            Event::MPD(song) => println!("Got from MPD"),
+            Event::Music(current_song, album_art, next_song) => {
+                println!("{:?}", current_song);
+                println!("{:?}", next_song);
+
+                let mime;
+                let data_uri;
+
+                if let Some(art) = album_art {
+                    mime = infer::get(&art)
+                        .map(|t| t.mime_type())
+                        .unwrap_or("image/png");
+                    let base64_data = STANDARD.encode(art);
+                    data_uri = format!("data:{};base64,{}", mime, base64_data);
+                } else {
+                    data_uri = String::from("foo");
+                }
+
+                music_html = MusicTemplate {
+                    current_song: &current_song.unwrap(),
+                    album_art: &data_uri,
+                }
+                .render()
+                .unwrap();
+            }
             Event::Weather => println!("Got from weather"),
         }
+
+        let dash_rendered = IndexTemplate {
+            music_html: &music_html,
+        }
+        .render()
+        .unwrap();
+        let mut dash_file = NamedTempFile::new().unwrap();
+        write!(dash_file, "{}", dash_rendered);
+
+        let mut dash_img = Builder::new().suffix(".png").tempfile().unwrap();
+
+        let _ = Command::new("firefox")
+            .args([
+                "--headless",
+                "-P",
+                "screenshot",
+                "--screenshot",
+                dash_img.path().to_str().unwrap(),
+                "--window-size",
+                &format!("{},{}", KINDLE_W, KINDLE_H),
+                &format!("file:///{}", dash_file.path().display()),
+            ])
+            .status();
+
+        process_img(dash_img.path());
+
+        let file = File::open(dash_img.path()).await.unwrap();
+        let file_part = Part::stream(file)
+            .file_name("dash.png")
+            .mime_str("image/png")
+            .unwrap();
+
+        let form = Form::new().part("file", file_part);
+        let client = Client::new();
+        let res = client
+            .post("http://kindle.lan:3000/image")
+            .multipart(form)
+            .send()
+            .await
+            .unwrap();
     }
 }
