@@ -1,7 +1,7 @@
 use crate::Event;
-use mpd::{Client, Idle, error::Result};
+use mpd::{Client, Idle};
 
-use std::env;
+use std::{env, error::Error};
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
@@ -11,6 +11,7 @@ pub struct Song {
     pub album: String,
     pub date: String,
 }
+
 impl From<mpd::Song> for Song {
     fn from(value: mpd::Song) -> Self {
         let mut album = None;
@@ -33,12 +34,12 @@ impl From<mpd::Song> for Song {
 
 pub type AlbumArt = Vec<u8>;
 
-fn init_mpd() -> Result<Client> {
+fn init_mpd() -> Result<Client, Box<dyn Error>> {
     let mpd_host_pass = env::var("MPD_HOST").unwrap_or(String::from("localhost"));
     let mpd_port = env::var("MPD_PORT").unwrap_or(String::from("6600"));
-    let mpd_host: &str;
-    let mpd_pass: Option<&str>;
 
+    let mpd_host;
+    let mpd_pass;
     if let Some((pass, host)) = mpd_host_pass.split_once('@') {
         mpd_host = host;
         mpd_pass = Some(pass);
@@ -46,6 +47,7 @@ fn init_mpd() -> Result<Client> {
         mpd_host = &mpd_host_pass;
         mpd_pass = None;
     }
+
     let mut client = Client::connect(format!("{mpd_host}:{mpd_port}"))?;
     if let Some(password) = mpd_pass {
         client.login(password)?;
@@ -54,7 +56,7 @@ fn init_mpd() -> Result<Client> {
     Ok(client)
 }
 
-pub fn mpd(tx: mpsc::Sender<Event>) -> Result<()> {
+pub fn mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
     let mut client = init_mpd()?;
     loop {
         if let Ok(_) = client.wait(&[mpd::Subsystem::Player]) {
