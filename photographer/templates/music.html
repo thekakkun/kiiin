@@ -1,6 +1,18 @@
 <div>
+    {% if let Some(album_art) = album_art %}
     <img src="{{ album_art }}" style="max-width: 600px;">
+    {% endif %}
+
+    {% if let Some(current_song) = current_song %}
     <p>{{ current_song.title }}</p>
     <p>{{ current_song.artist }}</p>
     <p>{{ current_song.album }} [{{ current_song.date }}]</p>
+    {% endif %}
+
+    {% if let Some(next_song) = next_song %}
+    <p>Next: </p>
+    <p>{{ next_song.title }}</p>
+    <p>{{ next_song.artist }}</p>
+    <p>{{ next_song.album }} [{{ next_song.date }}]</p>
+    {% endif %}
 </div>

@@ -5,7 +5,7 @@ mod template;
 
 use crate::music::mpd;
 use crate::music::{AlbumArt, Song};
-use crate::template::{IndexTemplate, MusicTemplate};
+use crate::template::{DashTemplate, MusicTemplate, generate_uri};
 
 use base64::engine::general_purpose::STANDARD;
 
@@ -56,25 +56,12 @@ async fn main() {
     while let Some(event) = rx.recv().await {
         match event {
             Event::Music(current_song, album_art, next_song) => {
-                println!("{:?}", current_song);
-                println!("{:?}", next_song);
-
-                let mime;
-                let data_uri;
-
-                if let Some(art) = album_art {
-                    mime = infer::get(&art)
-                        .map(|t| t.mime_type())
-                        .unwrap_or("image/png");
-                    let base64_data = STANDARD.encode(art);
-                    data_uri = format!("data:{};base64,{}", mime, base64_data);
-                } else {
-                    data_uri = String::from("foo");
-                }
+                let data_uri = generate_uri(album_art);
 
                 music_html = MusicTemplate {
-                    current_song: &current_song.unwrap(),
+                    current_song: &current_song,
                     album_art: &data_uri,
+                    next_song: &next_song,
                 }
                 .render()
                 .unwrap();
@@ -82,7 +69,7 @@ async fn main() {
             Event::Weather => println!("Got from weather"),
         }
 
-        let dash_rendered = IndexTemplate {
+        let dash_rendered = DashTemplate {
             music_html: &music_html,
         }
         .render()

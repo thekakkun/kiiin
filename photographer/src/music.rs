@@ -1,5 +1,5 @@
 use crate::Event;
-use mpd::{Client, Idle};
+use mpd::{Client, Idle, error::Result};
 
 use std::env;
 use tokio::sync::mpsc;
@@ -33,7 +33,7 @@ impl From<mpd::Song> for Song {
 
 pub type AlbumArt = Vec<u8>;
 
-fn init_mpd() -> Result<Client, &'static str> {
+fn init_mpd() -> Result<Client> {
     let mpd_host_pass = env::var("MPD_HOST").unwrap_or(String::from("localhost"));
     let mpd_port = env::var("MPD_PORT").unwrap_or(String::from("6600"));
     let mpd_host: &str;
@@ -46,45 +46,34 @@ fn init_mpd() -> Result<Client, &'static str> {
         mpd_host = &mpd_host_pass;
         mpd_pass = None;
     }
-    let mut client = Client::connect(format!("{mpd_host}:{mpd_port}"))
-        .map_err(|_| "Error connecting to client")?;
+    let mut client = Client::connect(format!("{mpd_host}:{mpd_port}"))?;
     if let Some(password) = mpd_pass {
-        client
-            .login(password)
-            .map_err(|_| "Could not log in to client")?;
+        client.login(password)?;
     }
 
     Ok(client)
 }
 
-pub fn mpd(tx: mpsc::Sender<Event>) -> Result<(), &'static str> {
+pub fn mpd(tx: mpsc::Sender<Event>) -> Result<()> {
     let mut client = init_mpd()?;
     loop {
         if let Ok(_) = client.wait(&[mpd::Subsystem::Player]) {
-            let status = client.status().map_err(|_| "Could not get status")?;
+            let status = client.status()?;
 
             let mut current_song = None;
             let mut album_art = None;
             let mut next_song = None;
 
             if let Some(queue_place) = status.song {
-                current_song = client
-                    .playlistid(queue_place.id)
-                    .map_err(|_| "Could not get current song")?;
+                current_song = client.playlistid(queue_place.id)?;
 
                 if let Some(ref song) = current_song {
-                    album_art = Some(
-                        client
-                            .albumart(&song)
-                            .map_err(|_| "Could not get album art")?,
-                    );
+                    album_art = Some(client.albumart(&song)?);
                 }
             }
 
             if let Some(queue_place) = status.nextsong {
-                next_song = client
-                    .playlistid(queue_place.id)
-                    .map_err(|_| "Could not get next song")?;
+                next_song = client.playlistid(queue_place.id)?;
             }
 
             let _ = tx.blocking_send(Event::Music(
