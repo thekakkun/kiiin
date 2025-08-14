@@ -7,14 +7,12 @@ use crate::music::mpd;
 use crate::music::{AlbumArt, Song};
 use crate::template::{DashTemplate, MusicTemplate, generate_uri};
 
-use base64::engine::general_purpose::STANDARD;
-
 use askama::Template;
-use base64::Engine;
 use image::ImageReader;
 use image::imageops::rotate90;
 use reqwest::Client;
 use reqwest::multipart::{Form, Part};
+use std::error::Error;
 use std::io::Write;
 use std::path::Path;
 use std::process::Command;
@@ -42,7 +40,7 @@ fn process_img(path: &Path) {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn Error>> {
     let (tx, mut rx) = mpsc::channel(100);
 
     tokio::task::spawn_blocking(|| {
@@ -63,8 +61,7 @@ async fn main() {
                     album_art: &data_uri,
                     next_song: &next_song,
                 }
-                .render()
-                .unwrap();
+                .render()?;
             }
             Event::Weather => println!("Got from weather"),
         }
@@ -72,12 +69,12 @@ async fn main() {
         let dash_rendered = DashTemplate {
             music_html: &music_html,
         }
-        .render()
-        .unwrap();
-        let mut dash_file = NamedTempFile::new().unwrap();
-        write!(dash_file, "{}", dash_rendered);
+        .render()?;
 
-        let mut dash_img = Builder::new().suffix(".png").tempfile().unwrap();
+        let mut dash_file = NamedTempFile::new()?;
+        write!(dash_file, "{}", dash_rendered)?;
+
+        let dash_img = Builder::new().suffix(".png").tempfile().unwrap();
 
         let _ = Command::new("firefox")
             .args([
@@ -97,16 +94,16 @@ async fn main() {
         let file = File::open(dash_img.path()).await.unwrap();
         let file_part = Part::stream(file)
             .file_name("dash.png")
-            .mime_str("image/png")
-            .unwrap();
+            .mime_str("image/png")?;
 
         let form = Form::new().part("file", file_part);
         let client = Client::new();
-        let res = client
+        client
             .post("http://kindle.lan:3000/image")
             .multipart(form)
             .send()
-            .await
-            .unwrap();
+            .await?;
     }
+
+    Ok(())
 }
