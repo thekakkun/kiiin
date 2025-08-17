@@ -2,7 +2,7 @@ use std::{env, fs::File, process::Command};
 
 use axum::{
     Router,
-    extract::Multipart,
+    extract::{Multipart, multipart::Field},
     http::StatusCode,
     routing::{get, post},
 };
@@ -40,38 +40,58 @@ async fn handle_text(body: String) -> StatusCode {
 }
 
 async fn handle_image(mut multipart: Multipart) -> StatusCode {
-    let dir = env::var("DIR").unwrap_or("/mnt/us/extensions/kiiin_frame".to_string());
+    let mut img_format = ImageFormat::Png;
+    let mut refresh = false;
+
     while let Some(field) = multipart.next_field().await.unwrap() {
-        let format = match field.content_type() {
-            Some("image/bmp") => ImageFormat::Bmp,
-            Some("image/png") => ImageFormat::Png,
-            _ => return StatusCode::UNSUPPORTED_MEDIA_TYPE,
-        };
+        let name = field.name().unwrap();
 
-        let data = field.bytes().await.unwrap();
-        let img = image::load_from_memory_with_format(&data, format).unwrap();
-
-        let mut file = match File::create(format!("{dir}/image")) {
-            Ok(f) => f,
-            Err(e) => return StatusCode::INTERNAL_SERVER_ERROR,
-        };
-        if let Err(e) = img.write_to(&mut file, format) {
-            return StatusCode::INTERNAL_SERVER_ERROR;
+        match name {
+            "file" => img_format = save_image(field).await.unwrap(),
+            "refresh" => refresh = field.text().await.unwrap() == "true",
+            &_ => println!("Unknown field: {}", name),
         }
-
-        let mut eips = Command::new("eips");
-        let _ = match format {
-            ImageFormat::Bmp => eips
-                .args(["-b", "image"])
-                .stdout(std::process::Stdio::null())
-                .status(),
-            ImageFormat::Png => eips
-                .args(["-g", "image"])
-                .stdout(std::process::Stdio::null())
-                .status(),
-            _ => unreachable!(),
-        };
     }
+    let mut eips_cmd = Command::new("eips");
 
-    StatusCode::OK
+    if refresh {
+        eips_cmd.arg("-f");
+    };
+
+    match img_format {
+        ImageFormat::Bmp => eips_cmd.args(["-b", "image"]),
+        ImageFormat::Png => eips_cmd.args(["-g", "image"]),
+        _ => return StatusCode::INTERNAL_SERVER_ERROR,
+    };
+    match eips_cmd.output() {
+        Ok(_) => StatusCode::OK,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
+async fn save_image(field: Field<'_>) -> Result<ImageFormat, StatusCode> {
+    let dir = env::var("DIR").unwrap_or("/mnt/us/extensions/kiiin_frame".to_string());
+    let img_format = match field.content_type() {
+        Some("image/bmp") => ImageFormat::Bmp,
+        Some("image/png") => ImageFormat::Png,
+        _ => return Err(StatusCode::UNSUPPORTED_MEDIA_TYPE),
+    };
+
+    let data = match field.bytes().await {
+        Ok(data) => data,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+    let img = match image::load_from_memory_with_format(&data, img_format) {
+        Ok(img) => img,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+    let mut file = match File::create(format!("{dir}/image")) {
+        Ok(f) => f,
+        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+    };
+
+    match img.write_to(&mut file, img_format) {
+        Ok(_) => Ok(img_format),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
