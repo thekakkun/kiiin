@@ -8,13 +8,12 @@ use crate::music::{AlbumArt, Song};
 use crate::template::{DashTemplate, MusicTemplate, generate_uri};
 
 use askama::Template;
-use image::ImageReader;
-use image::imageops::rotate90;
+use image::{ImageReader, imageops::rotate90};
 use reqwest::Client;
 use reqwest::multipart::{Form, Part};
+use std::env;
 use std::error::Error;
 use std::io::Write;
-use std::path::Path;
 use std::process::Command;
 use tempfile::{Builder, NamedTempFile};
 use tokio::fs::File;
@@ -29,7 +28,33 @@ enum Event {
     Weather,
 }
 
-fn process_img(path: &Path) {
+fn html_to_screenshot(html: String) -> Result<NamedTempFile, Box<dyn Error>> {
+    let profile = env::var("FIREFOX_PROFILE").unwrap_or(String::from("screenshot"));
+
+    let mut dash_file = NamedTempFile::new()?;
+    write!(dash_file, "{}", html)?;
+
+    let dash_img = Builder::new().suffix(".png").tempfile().unwrap();
+
+    let mut command = Command::new("firefox");
+    command.arg("--headless");
+    command.args(["-P", &profile]);
+    command.args([
+        "--screenshot",
+        dash_img.path().to_str().unwrap(),
+        "--window-size",
+        &format!("{},{}", KINDLE_W, KINDLE_H),
+    ]);
+    command
+        .arg(&format!("file:///{}", dash_file.path().display()))
+        .output()?;
+
+    Ok(dash_img)
+}
+
+// Processes image in path for Kindle
+fn process_img(img: &NamedTempFile) {
+    let path = img.path();
     let img = ImageReader::open(path)
         .unwrap()
         .decode()
@@ -49,7 +74,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         };
     });
 
+    let mut song: Option<Song> = None;
     let mut music_html = String::default();
+    let mut refresh = false;
 
     while let Some(event) = rx.recv().await {
         match event {
@@ -62,6 +89,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     next_song: &next_song,
                 }
                 .render()?;
+
+                if let (Some(song), Some(current_song)) = (&song, &current_song) {
+                    refresh = song.album != current_song.album
+                }
+                song = current_song;
             }
             Event::Weather => println!("Got from weather"),
         }
@@ -71,32 +103,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
         .render()?;
 
-        let mut dash_file = NamedTempFile::new()?;
-        write!(dash_file, "{}", dash_rendered)?;
+        let dash_img = html_to_screenshot(dash_rendered)?;
+        process_img(&dash_img);
 
-        let dash_img = Builder::new().suffix(".png").tempfile().unwrap();
-
-        let _ = Command::new("firefox")
-            .args([
-                "--headless",
-                "-P",
-                "screenshot",
-                "--screenshot",
-                dash_img.path().to_str().unwrap(),
-                "--window-size",
-                &format!("{},{}", KINDLE_W, KINDLE_H),
-                &format!("file:///{}", dash_file.path().display()),
-            ])
-            .status();
-
-        process_img(dash_img.path());
-
-        let file = File::open(dash_img.path()).await.unwrap();
-        let file_part = Part::stream(file)
-            .file_name("dash.png")
+        let file_part = Part::stream(File::from(dash_img.into_file()))
+            .file_name("photo.png")
             .mime_str("image/png")?;
+        let bool_part = Part::text(refresh.to_string());
 
-        let form = Form::new().part("file", file_part);
+        let form = Form::new()
+            .part("file", file_part)
+            .part("refresh", bool_part);
         let client = Client::new();
         client
             .post("http://kindle.lan:3000/image")
