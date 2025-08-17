@@ -6,6 +6,8 @@ LOG="$DIR/log.txt"
 
 exec > >(tee -a "$LOG") 2>&1
 
+echo "Launching Kiiin Frame at $(date)"
+
 # shellcheck disable=SC1090
 if [ -f "$ENV_FILE" ]; then
     . "$ENV_FILE"
@@ -15,9 +17,17 @@ fi
 
 # Default to port 3000 if not set
 PORT="${PORT:-3000}"
+echo "Using port $PORT"
 
+echo "Adding iptables rule for port $PORT"
 iptables -I INPUT -p tcp --dport "$PORT" -j ACCEPT
 
-initctl stop webreader
+echo "Kill GUI"
+stop lab126_gui
+stop webreader
+
+echo "Disabling screensaver"
 lipc-set-prop com.lab126.powerd preventScreenSaver 1
+
+echo "Starting kiiin_frame"
 "$DIR/bin/kiiin_frame"
