@@ -29,7 +29,7 @@ enum Event {
 }
 
 fn html_to_screenshot(html: String) -> Result<NamedTempFile, Box<dyn Error>> {
-    let profile = env::var("FIREFOX_PROFILE").unwrap_or(String::from("screenshot"));
+    let profile = env::var("FIREFOX_PROFILE").ok();
 
     let mut dash_file = NamedTempFile::new()?;
     write!(dash_file, "{}", html)?;
@@ -38,7 +38,9 @@ fn html_to_screenshot(html: String) -> Result<NamedTempFile, Box<dyn Error>> {
 
     let mut command = Command::new("firefox");
     command.arg("--headless");
-    command.args(["-P", &profile]);
+    if let Some(p) = profile {
+        command.args(["-P", &p]);
+    }
     command.args([
         "--screenshot",
         dash_img.path().to_str().unwrap(),
