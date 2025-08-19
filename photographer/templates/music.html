@@ -9,18 +9,18 @@
         {% if let Some(current_song) = current_song %}
         <p class="title">{{ current_song.title }}</p>
         <p class="artist">{{ current_song.artist }}</p>
-        <p class="album">{{ current_song.album }} [<span class="date">{{ current_song.date }}</span>]</p>
+        <p class="album">{{ current_song.album }} (<span class="date">{{ current_song.date }}</span>)</p>
         {% endif %}
     </div>
 </div>
 
 <div id="next">
-    <p class="arrow">Next:</p>
     {% if let Some(next_song) = next_song %}
+    <p class="arrow">Next:</p>
     <p class="track">
-        <span class="title">{{ next_song.title }}</span>: 
-        <span class="artist">{{ next_song.artist }}</span> - 
-        <span class="album">{{ next_song.album }} [<span class="date">{{ next_song.date }}</span>]</span>
+        <span class="title">{{ next_song.title }}</span> by 
+        <span class="artist">{{ next_song.artist }}</span> from 
+        <span class="album">{{ next_song.album }} (<span class="date">{{ next_song.date }}</span>)</span>
     </p>
     {% endif %}
 </div>

@@ -59,7 +59,7 @@ fn init_mpd() -> Result<Client, Box<dyn Error>> {
 pub fn mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
     let mut client = init_mpd()?;
     loop {
-        if let Ok(_) = client.wait(&[mpd::Subsystem::Player]) {
+        if let Ok(_) = client.wait(&[mpd::Subsystem::Player, mpd::Subsystem::Playlist]) {
             let status = client.status()?;
 
             let mut current_song = None;

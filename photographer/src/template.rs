@@ -24,7 +24,7 @@ pub fn generate_uri(album_art: Option<AlbumArt>) -> Option<String> {
 }
 
 #[derive(Template)]
-#[template(path = "dash.html")]
+#[template(path = "index.html")]
 pub struct DashTemplate<'a> {
     pub music_html: &'a str,
 }
