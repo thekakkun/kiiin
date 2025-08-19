@@ -70,7 +70,7 @@ pub fn mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
                 current_song = client.playlistid(queue_place.id)?;
 
                 if let Some(ref song) = current_song {
-                    album_art = Some(client.albumart(&song)?);
+                    album_art = client.albumart(&song).ok();
                 }
             }
 
