@@ -8,7 +8,7 @@ The perfect dashboard for everyone! as long as you:
 - have a [Music Player Daemon](https://www.musicpd.org/) setup
 - live in Canada (dependent feature under construction)
 
-kiiin consists of two pieces:
+kiiin consists of two main services:
 
 - [frame](frame/):
 
