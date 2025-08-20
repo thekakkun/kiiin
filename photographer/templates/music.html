@@ -1,9 +1,9 @@
 <div id="current">
+    {% if let Some(album_art) = album_art %}
     <div id="cover">
-        {% if let Some(album_art) = album_art %}
         <img src="{{ album_art }}">
-        {% endif %}
     </div>
+    {% endif %}
 
     <div class="track">
         {% if let Some(current_song) = current_song %}
