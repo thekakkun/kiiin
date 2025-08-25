@@ -18,8 +18,8 @@ impl From<mpd::Song> for Song {
         let mut date = None;
         for tag in value.tags.into_iter() {
             match tag {
-                (name, value) if name == String::from("Album") => album = Some(value),
-                (name, value) if name == String::from("Date") => date = Some(value),
+                (name, value) if name == "Album" => album = Some(value),
+                (name, value) if name == "Date" => date = Some(value),
                 _ => {}
             }
         }
@@ -56,10 +56,13 @@ fn init_mpd() -> Result<Client, Box<dyn Error>> {
     Ok(client)
 }
 
-pub fn mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
+pub fn monitor_mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
     let mut client = init_mpd()?;
     loop {
-        if let Ok(_) = client.wait(&[mpd::Subsystem::Player, mpd::Subsystem::Playlist]) {
+        if client
+            .wait(&[mpd::Subsystem::Player, mpd::Subsystem::Playlist])
+            .is_ok()
+        {
             let status = client.status()?;
 
             let mut current_song = None;
@@ -80,7 +83,7 @@ pub fn mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
 
             let _ = tx.blocking_send(Event::Music(
                 current_song.map(Song::from),
-                album_art,
+                Box::new(album_art),
                 next_song.map(Song::from),
             ));
         }

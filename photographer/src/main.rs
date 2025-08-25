@@ -2,10 +2,12 @@ extern crate mpd;
 
 mod music;
 mod template;
+mod weather;
 
-use crate::music::mpd;
+use crate::music::monitor_mpd;
 use crate::music::{AlbumArt, Song};
 use crate::template::{DashTemplate, MusicTemplate, generate_uri};
+use crate::weather::monitor_weather;
 
 use askama::Template;
 use image::{ImageReader, imageops::rotate90};
@@ -24,7 +26,7 @@ const KINDLE_W: u16 = 1448;
 
 #[derive(Debug)]
 enum Event {
-    Music(Option<Song>, Option<AlbumArt>, Option<Song>),
+    Music(Option<Song>, Box<Option<AlbumArt>>, Option<Song>),
     Weather,
 }
 
@@ -48,7 +50,7 @@ fn html_to_screenshot(html: String) -> Result<NamedTempFile, Box<dyn Error>> {
         &format!("{},{}", KINDLE_W, KINDLE_H),
     ]);
     command
-        .arg(&format!("file:///{}", dash_file.path().display()))
+        .arg(format!("file:///{}", dash_file.path().display()))
         .output()?;
 
     Ok(dash_img)
@@ -69,11 +71,17 @@ fn process_img(img: &NamedTempFile) {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let (tx, mut rx) = mpsc::channel(100);
+    let tx2 = tx.clone();
 
     tokio::task::spawn_blocking(|| {
-        if let Err(e) = mpd(tx) {
+        if let Err(e) = monitor_mpd(tx) {
             eprintln!("MPD error: {}", e);
         };
+    });
+    tokio::task::spawn(async move {
+        if let Err(e) = monitor_weather(tx2).await {
+            eprintln!("Weather monitor error: {}", e);
+        }
     });
 
     let mut song: Option<Song> = None;
@@ -83,7 +91,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     while let Some(event) = rx.recv().await {
         match event {
             Event::Music(current_song, album_art, next_song) => {
-                let data_uri = generate_uri(album_art);
+                let data_uri = generate_uri(*album_art);
 
                 music_html = MusicTemplate {
                     current_song: &current_song,
