@@ -1,5 +1,7 @@
+use chrono::NaiveDateTime;
 use futures_lite::stream::StreamExt;
 use std::error::Error;
+use url::Url;
 
 use lapin::{
     Connection, ConnectionProperties, Consumer, ExchangeKind,
@@ -61,11 +63,19 @@ async fn init_consumer() -> Result<Consumer, Box<dyn Error>> {
     Ok(channel
         .basic_consume(
             queue.name().as_str(),
-            "weather_consumer",
+            "",
             BasicConsumeOptions::default(),
             FieldTable::default(),
         )
         .await?)
+}
+
+async fn get_citypage(url: Url) -> Result<String, Box<dyn Error>> {
+    Ok(reqwest::get(url).await?.text().await?)
+}
+
+fn citypage_weather() -> Result<(), Box<dyn Error>> {
+    unimplemented!()
 }
 
 pub async fn monitor_weather(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
@@ -74,11 +84,16 @@ pub async fn monitor_weather(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Erro
     while let Some(delivery) = consumer.next().await {
         if let Ok(delivery) = delivery {
             let body = std::str::from_utf8(&delivery.data)?;
-            if let Some((timestamp, rest)) = body.split_once(" ")
-                && let Some((base_url, path)) = rest.split_once(" ")
-            {
-                println!("{}, {}, {}", timestamp, base_url, path);
-            }
+            let mut iter = body.split_whitespace();
+
+            let timestamp = NaiveDateTime::parse_from_str(
+                iter.next().ok_or("missing timestamp")?,
+                "%Y%m%d%H%M%S%.3f",
+            )?;
+            let mut url = Url::parse(iter.next().ok_or("missing url")?)?;
+            url.set_path(iter.next().ok_or("missing path")?);
+
+            println!("{:?}, {},", timestamp, url);
 
             delivery.ack(BasicAckOptions::default()).await?;
         }
