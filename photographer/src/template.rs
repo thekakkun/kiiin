@@ -1,16 +1,40 @@
-use crate::music::{AlbumArt, Song};
+use crate::{
+    Event, KINDLE_H, KINDLE_W,
+    music::{AlbumArt, Song},
+};
 use askama::Template;
+use std::io::Write;
 
 use base64::{Engine, engine::general_purpose::STANDARD};
+use std::{env, error::Error, process::Command};
+use tempfile::{Builder, NamedTempFile};
+
 #[derive(Template)]
 #[template(path = "music.html")]
-pub struct MusicTemplate<'a> {
-    pub current_song: &'a Option<Song>,
-    pub album_art: &'a Option<String>,
-    pub next_song: &'a Option<Song>,
+pub struct MusicTemplate {
+    pub current_song: Option<Song>,
+    pub album_art: Option<String>,
+    pub next_song: Option<Song>,
 }
 
-pub fn generate_uri(album_art: Option<AlbumArt>) -> Option<String> {
+impl TryFrom<Event> for MusicTemplate {
+    type Error = askama::Error;
+
+    fn try_from(value: Event) -> Result<Self, Self::Error> {
+        if let Event::Music(current_song, album_art, next_song) = value {
+            let data_uri = generate_uri(*album_art);
+            Ok(Self {
+                current_song,
+                album_art: data_uri,
+                next_song,
+            })
+        } else {
+            Err(askama::Error::ValueType)
+        }
+    }
+}
+
+fn generate_uri(album_art: Option<AlbumArt>) -> Option<String> {
     match album_art {
         Some(art) => {
             let mime = infer::get(&art)
@@ -25,6 +49,36 @@ pub fn generate_uri(album_art: Option<AlbumArt>) -> Option<String> {
 
 #[derive(Template)]
 #[template(path = "index.html")]
-pub struct DashTemplate<'a> {
-    pub music_html: &'a str,
+pub struct KiiinTemplate<'a> {
+    pub music: &'a Option<MusicTemplate>,
+}
+
+impl<'a> KiiinTemplate<'a> {
+    pub fn screenshot(&self) -> Result<NamedTempFile, Box<dyn Error>> {
+        let rendered = self.render()?;
+
+        let profile = env::var("FIREFOX_PROFILE").ok();
+
+        let mut dash_file = NamedTempFile::new()?;
+        write!(dash_file, "{}", rendered)?;
+
+        let dash_img = Builder::new().suffix(".png").tempfile().unwrap();
+
+        let mut command = Command::new("firefox");
+        command.arg("--headless");
+        if let Some(p) = profile {
+            command.args(["-P", &p]);
+        }
+        command.args([
+            "--screenshot",
+            dash_img.path().to_str().unwrap(),
+            "--window-size",
+            &format!("{},{}", KINDLE_W, KINDLE_H),
+        ]);
+        command
+            .arg(format!("file:///{}", dash_file.path().display()))
+            .output()?;
+
+        Ok(dash_img)
+    }
 }

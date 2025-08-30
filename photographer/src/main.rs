@@ -6,54 +6,24 @@ mod weather;
 
 use crate::music::monitor_mpd;
 use crate::music::{AlbumArt, Song};
-use crate::template::{DashTemplate, MusicTemplate, generate_uri};
+use crate::template::{KiiinTemplate, MusicTemplate};
 use crate::weather::monitor_weather;
 
-use askama::Template;
 use image::{ImageReader, imageops::rotate90};
 use reqwest::Client;
 use reqwest::multipart::{Form, Part};
-use std::env;
 use std::error::Error;
-use std::io::Write;
-use std::process::Command;
-use tempfile::{Builder, NamedTempFile};
+use tempfile::NamedTempFile;
 use tokio::fs::File;
 use tokio::sync::mpsc;
 
-const KINDLE_H: u16 = 1072;
-const KINDLE_W: u16 = 1448;
+pub const KINDLE_H: u16 = 1072;
+pub const KINDLE_W: u16 = 1448;
 
 #[derive(Debug)]
 enum Event {
     Music(Option<Song>, Box<Option<AlbumArt>>, Option<Song>),
     Weather,
-}
-
-fn html_to_screenshot(html: String) -> Result<NamedTempFile, Box<dyn Error>> {
-    let profile = env::var("FIREFOX_PROFILE").ok();
-
-    let mut dash_file = NamedTempFile::new()?;
-    write!(dash_file, "{}", html)?;
-
-    let dash_img = Builder::new().suffix(".png").tempfile().unwrap();
-
-    let mut command = Command::new("firefox");
-    command.arg("--headless");
-    if let Some(p) = profile {
-        command.args(["-P", &p]);
-    }
-    command.args([
-        "--screenshot",
-        dash_img.path().to_str().unwrap(),
-        "--window-size",
-        &format!("{},{}", KINDLE_W, KINDLE_H),
-    ]);
-    command
-        .arg(format!("file:///{}", dash_file.path().display()))
-        .output()?;
-
-    Ok(dash_img)
 }
 
 // Processes image in path for Kindle
@@ -84,36 +54,33 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     });
 
-    let mut song: Option<Song> = None;
-    let mut music_html = String::default();
+    let mut music_template: Option<MusicTemplate> = None;
     let mut refresh = false;
 
     while let Some(event) = rx.recv().await {
         match event {
-            Event::Music(current_song, album_art, next_song) => {
-                let data_uri = generate_uri(*album_art);
-
-                music_html = MusicTemplate {
-                    current_song: &current_song,
-                    album_art: &data_uri,
-                    next_song: &next_song,
+            Event::Music(ref current_song, ref _album_art, ref _next_song) => {
+                if let (
+                    Some(MusicTemplate {
+                        current_song: Some(previous),
+                        ..
+                    }),
+                    Some(current),
+                ) = (&music_template, &current_song)
+                {
+                    refresh = previous.album != current.album
                 }
-                .render()?;
 
-                if let (Some(song), Some(current_song)) = (&song, &current_song) {
-                    refresh = song.album != current_song.album
-                }
-                song = current_song;
+                music_template = Some(event.try_into()?);
             }
             Event::Weather => println!("Got from weather"),
         }
 
-        let dash_rendered = DashTemplate {
-            music_html: &music_html,
-        }
-        .render()?;
+        let template = KiiinTemplate {
+            music: &music_template,
+        };
 
-        let dash_img = html_to_screenshot(dash_rendered)?;
+        let dash_img = template.screenshot()?;
         process_img(&dash_img);
 
         let file_part = Part::stream(File::from(dash_img.into_file()))

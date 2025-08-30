@@ -5,7 +5,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -16,7 +16,7 @@
       }
 
       * {
-        font-family: "Space Mono", "IBM Plex Sans JP";
+        font-family: "IBM Plex Sans", "IBM Plex Sans JP";
         margin: 0;
       }
 
@@ -144,8 +144,9 @@
   </head>
 
   <body>
+    {% if let Some(music) = music %}
+    <section id="music">{{ music | safe }}</section>
+    {% endif %}
     <section id="weather"></section>
-
-    <section id="music">{{ music_html | safe}}</section>
   </body>
 </html>
