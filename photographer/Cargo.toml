@@ -17,4 +17,3 @@ reqwest = { version = "0.12.22", features = ["multipart", "stream"] }
 tempfile = "3.20.0"
 tokio = { version = "1.47.0", features = ["full"] }
 url = "2.5.7"
-xsd-parser = "1.3.0"
