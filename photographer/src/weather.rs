@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use futures_lite::stream::StreamExt;
+use quick_xml::Reader;
 use std::error::Error;
 use url::Url;
 
@@ -14,6 +15,12 @@ use lapin::{
 use tokio::sync::mpsc;
 
 use crate::Event;
+
+pub struct CurrentCondition {
+    icon: WeatherIcon,
+    temperature: f32,
+    condition: String,
+}
 
 pub enum WeatherIcon {
     Cloudy,
@@ -155,10 +162,6 @@ async fn init_consumer() -> Result<Consumer, Box<dyn Error>> {
         .await?)
 }
 
-async fn get_citypage(url: Url) -> Result<String, Box<dyn Error>> {
-    Ok(reqwest::get(url).await?.text().await?)
-}
-
 fn citypage_weather() -> Result<(), Box<dyn Error>> {
     unimplemented!()
 }
@@ -181,6 +184,35 @@ pub async fn monitor_weather(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Erro
             println!("{:?}, {},", timestamp, url);
 
             delivery.ack(BasicAckOptions::default()).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn parse_weather_citypage(url: Url) -> Result<(), Box<dyn Error>> {
+    let xml = reqwest::get(url).await?.text().await?;
+
+    let mut reader = Reader::from_str(&xml);
+    let config = reader.config_mut();
+    config.trim_text(true);
+    config.expand_empty_elements = true;
+
+    loop {
+        match reader.read_event()? {
+            quick_xml::events::Event::Start(element) => match element.name().as_ref() {
+                b"currentConditions" => {}
+            },
+            quick_xml::events::Event::End(bytes_end) => todo!(),
+            quick_xml::events::Event::Empty(bytes_start) => todo!(),
+            quick_xml::events::Event::Text(bytes_text) => todo!(),
+            quick_xml::events::Event::CData(bytes_cdata) => todo!(),
+            quick_xml::events::Event::Comment(bytes_text) => todo!(),
+            quick_xml::events::Event::Decl(bytes_decl) => todo!(),
+            quick_xml::events::Event::PI(bytes_pi) => todo!(),
+            quick_xml::events::Event::DocType(bytes_text) => todo!(),
+            quick_xml::events::Event::GeneralRef(bytes_ref) => todo!(),
+            quick_xml::events::Event::Eof => break,
         }
     }
 

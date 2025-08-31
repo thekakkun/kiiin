@@ -54,31 +54,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     });
 
-    let mut music_template: Option<MusicTemplate> = None;
+    let mut template = KiiinTemplate { music: None };
     let mut refresh = false;
 
     while let Some(event) = rx.recv().await {
         match event {
             Event::Music(ref current_song, ref _album_art, ref _next_song) => {
-                if let (
-                    Some(MusicTemplate {
-                        current_song: Some(previous),
-                        ..
-                    }),
-                    Some(current),
-                ) = (&music_template, &current_song)
-                {
-                    refresh = previous.album != current.album
-                }
+                refresh = matches!(
+                    (&template.music, &current_song),
+                    (
+                        Some(MusicTemplate { current_song: Some(previous), .. }),
+                        Some(current)
+                    ) if previous.album != current.album
+                );
 
-                music_template = Some(event.try_into()?);
+                template.music = Some(event.try_into()?);
             }
             Event::Weather => println!("Got from weather"),
         }
-
-        let template = KiiinTemplate {
-            music: &music_template,
-        };
 
         let dash_img = template.screenshot()?;
         process_img(&dash_img);

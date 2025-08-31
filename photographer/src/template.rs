@@ -49,11 +49,11 @@ fn generate_uri(album_art: Option<AlbumArt>) -> Option<String> {
 
 #[derive(Template)]
 #[template(path = "index.html")]
-pub struct KiiinTemplate<'a> {
-    pub music: &'a Option<MusicTemplate>,
+pub struct KiiinTemplate {
+    pub music: Option<MusicTemplate>,
 }
 
-impl<'a> KiiinTemplate<'a> {
+impl KiiinTemplate {
     pub fn screenshot(&self) -> Result<NamedTempFile, Box<dyn Error>> {
         let rendered = self.render()?;
 
