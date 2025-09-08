@@ -7,7 +7,6 @@ mod weather;
 use crate::music::monitor_mpd;
 use crate::music::{AlbumArt, Song};
 use crate::template::{KiiinTemplate, MusicTemplate};
-use crate::weather::monitor_weather;
 
 use image::{ImageReader, imageops::rotate90};
 use reqwest::Client;
@@ -41,17 +40,11 @@ fn process_img(img: &NamedTempFile) {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let (tx, mut rx) = mpsc::channel(100);
-    let tx2 = tx.clone();
 
     tokio::task::spawn_blocking(|| {
         if let Err(e) = monitor_mpd(tx) {
             eprintln!("MPD error: {}", e);
         };
-    });
-    tokio::task::spawn(async move {
-        if let Err(e) = monitor_weather(tx2).await {
-            eprintln!("Weather monitor error: {}", e);
-        }
     });
 
     let mut template = KiiinTemplate { music: None };

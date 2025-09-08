@@ -6,14 +6,10 @@ edition = "2024"
 [dependencies]
 askama = "0.14.0"
 base64 = "0.22.1"
-chrono = "0.4.41"
-futures-lite = "2.6.1"
 image = "0.25.6"
 infer = "0.19.0"
 lapin = "3.2.1"
 mpd = "0.1.0"
-quick-xml = "0.38.3"
 reqwest = { version = "0.12.22", features = ["multipart", "stream"] }
 tempfile = "3.20.0"
 tokio = { version = "1.47.0", features = ["full"] }
-url = "2.5.7"
