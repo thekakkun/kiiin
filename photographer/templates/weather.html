@@ -1,0 +1,43 @@
+<section id="weather">
+  <div class="current">
+    {% if let Some(icon) = icon %}
+    <div class="icon">
+      {% include "current_condition_icon.html" %}
+      <p>{{ icon }}</p>
+    </div>
+    {% endif %}
+    {% if let Some(condition) = condition %}
+    <div class="condition">
+      <p>
+        {{ condition.temperature }}°C<span class="divider">/</span>{{ condition.pressure }} kPa
+        {% include "pressure_tendency_icon.html" %}
+      </p>
+    </div>
+    {% endif %}
+    {% if let Some(today) = today %}
+    <ul class="today">
+      {% if let Some(day) = today.0 %}
+      <li>{{ day.temperature }}°C<span class="divider">/</span>{{ day.percipitation }}%</li>
+      {% else %}
+      <li>-</li>
+      {% endif %}
+      {% if let Some(night) = today.1 %}
+      <li>{{ night.temperature }}°C<span class="divider">/</span>{{ night.percipitation }}%</li>
+      {% else %}
+      <li>-</li>
+      {% endif %}
+    </ul>
+    {% endif %}
+  </div>
+  {% if let Some(forecasts) = forecast %}
+  <ol class="forecast">
+    {% for f in forecasts %}
+    <li class="hourly">
+      <p class="time">{{ f.time.format("%H") }}</p>
+      {% include "forecast_condition_icon.html" %}
+      <p class="temp-lop">{{ f.temp_percip.temperature }}°C<span class="divider">/</span>{{ f.temp_percip.percipitation }}%</p>
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+</section>

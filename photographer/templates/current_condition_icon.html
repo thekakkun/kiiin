@@ -1,0 +1,82 @@
+{% match icon -%}
+  {%- when CurrentConditionIcon::Sunny -%}
+    {{ include_str!("../templates/img/wi-day-sunny.svg")|safe }}
+  {%- when CurrentConditionIcon::MainlySunny -%}
+    {{ include_str!("../templates/img/wi-day-sunny.svg")|safe }}
+  {%- when CurrentConditionIcon::PartlyCloudy -%}
+    {{ include_str!("../templates/img/wi-day-cloudy.svg")|safe }}
+  {%- when CurrentConditionIcon::MostlyCloudy -%}
+    {{ include_str!("../templates/img/wi-day-cloudy.svg")|safe }}
+  {%- when CurrentConditionIcon::LightRainShower -%}
+    {{ include_str!("../templates/img/wi-day-showers.svg")|safe }}
+  {%- when CurrentConditionIcon::LightRainShowerAndFlurries -%}
+    {{ include_str!("../templates/img/wi-day-rain-mix.svg")|safe }}
+  {%- when CurrentConditionIcon::LightFlurries -%}
+    {{ include_str!("../templates/img/wi-day-snow.svg")|safe }}
+  {%- when CurrentConditionIcon::Cloudy -%}
+    {{ include_str!("../templates/img/wi-cloudy.svg")|safe }}
+  {%- when CurrentConditionIcon::Precipitation -%}
+    {{ include_str!("../templates/img/wi-rain.svg")|safe }}
+  {%- when CurrentConditionIcon::RainShower -%}
+    {{ include_str!("../templates/img/wi-showers.svg")|safe }}
+  {%- when CurrentConditionIcon::Rain -%}
+    {{ include_str!("../templates/img/wi-rain.svg")|safe }}
+  {%- when CurrentConditionIcon::FreezingRain -%}
+    {{ include_str!("../templates/img/wi-rain-mix.svg")|safe }}
+  {%- when CurrentConditionIcon::RainAndFlurries -%}
+    {{ include_str!("../templates/img/wi-rain-mix.svg")|safe }}
+  {%- when CurrentConditionIcon::LightSnow -%}
+    {{ include_str!("../templates/img/wi-snow.svg")|safe }}
+  {%- when CurrentConditionIcon::Flurries -%}
+    {{ include_str!("../templates/img/wi-snow.svg")|safe }}
+  {%- when CurrentConditionIcon::HeavySnow -%}
+    {{ include_str!("../templates/img/wi-snow.svg")|safe }}
+  {%- when CurrentConditionIcon::Thunderstorm -%}
+    {{ include_str!("../templates/img/wi-thunderstorm.svg")|safe }}
+  {%- when CurrentConditionIcon::Haze -%}
+    {{ include_str!("../templates/img/wi-day-haze.svg")|safe }}
+  {%- when CurrentConditionIcon::Fog -%}
+    {{ include_str!("../templates/img/wi-fog.svg")|safe }}
+  {%- when CurrentConditionIcon::DriftingSnow -%}
+    {{ include_str!("../templates/img/wi-snow-wind.svg")|safe }}
+  {%- when CurrentConditionIcon::IceCrystals -%}
+    {{ include_str!("../templates/img/wi-snowflake-cold.svg")|safe }}
+  {%- when CurrentConditionIcon::IcePellets -%}
+    {{ include_str!("../templates/img/wi-sleet.svg")|safe }}
+  {%- when CurrentConditionIcon::Drizzle -%}
+    {{ include_str!("../templates/img/wi-sprinkle.svg")|safe }}
+  {%- when CurrentConditionIcon::Clear -%}
+    {{ include_str!("../templates/img/wi-night-clear.svg")|safe }}
+  {%- when CurrentConditionIcon::MainlyClear -%}
+    {{ include_str!("../templates/img/wi-night-clear.svg")|safe }}
+  {%- when CurrentConditionIcon::PartlyCloudyNight -%}
+    {{ include_str!("../templates/img/wi-night-cloudy.svg")|safe }}
+  {%- when CurrentConditionIcon::MostlyCloudyNight -%}
+    {{ include_str!("../templates/img/wi-night-cloudy.svg")|safe }}
+  {%- when CurrentConditionIcon::LightRainShowerNight -%}
+    {{ include_str!("../templates/img/wi-night-showers.svg")|safe }}
+  {%- when CurrentConditionIcon::LightRainShowerAndFlurriesNight -%}
+    {{ include_str!("../templates/img/wi-night-rain-mix.svg")|safe }}
+  {%- when CurrentConditionIcon::LightFlurriesNight -%}
+    {{ include_str!("../templates/img/wi-night-snow.svg")|safe }}
+  {%- when CurrentConditionIcon::ThunderstormNight -%}
+    {{ include_str!("../templates/img/wi-night-thunderstorm.svg")|safe }}
+  {%- when CurrentConditionIcon::BlowingSnow -%}
+    {{ include_str!("../templates/img/wi-snow-wind.svg")|safe }}
+  {%- when CurrentConditionIcon::FunnelCloud -%}
+    {{ include_str!("../templates/img/wi-tornado.svg")|safe }}
+  {%- when CurrentConditionIcon::Tornado -%}
+    {{ include_str!("../templates/img/wi-tornado.svg")|safe }}
+  {%- when CurrentConditionIcon::Windy -%}
+    {{ include_str!("../templates/img/wi-strong-wind.svg")|safe }}
+  {%- when CurrentConditionIcon::Smoke -%}
+    {{ include_str!("../templates/img/wi-smoke.svg")|safe }}
+  {%- when CurrentConditionIcon::DustStorm -%}
+    {{ include_str!("../templates/img/wi-dust.svg")|safe }}
+  {%- when CurrentConditionIcon::ThunderstormWithHail -%}
+    {{ include_str!("../templates/img/wi-hail.svg")|safe }}
+  {%- when CurrentConditionIcon::ThunderstormWithDust -%}
+    {{ include_str!("../templates/img/wi-thunderstorm.svg")|safe }}
+  {%- when CurrentConditionIcon::Waterspout -%}
+    {{ include_str!("../templates/img/wi-tornado.svg")|safe }}
+{%- endmatch %}

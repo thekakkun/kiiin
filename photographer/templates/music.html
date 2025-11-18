@@ -1,6 +1,6 @@
-<div id="current">
+<div class="current">
     {% if let Some(album_art) = album_art %}
-    <div id="cover">
+    <div class="cover">
         <img src="{{ album_art }}">
     </div>
     {% endif %}
@@ -14,9 +14,9 @@
     </div>
 </div>
 
-<div id="next">
+<div class="next">
     {% if let Some(next_song) = next_song %}
-    <svg id="arrow" width="100" height="40">
+    <svg class="arrow" width="100" height="40">
       <polyline points="0,0 80,0 100,20 80,40 0,40" />
       <text x="10"  dominant-baseline="middle" >
             <tspan y="21.5">NEXT</tspan><tspan y="20">:</tspan>

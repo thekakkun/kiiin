@@ -5,7 +5,7 @@ body {
   font-family: monospace;
 }
 
-#arrow text {
+.arrow text {
   fill: #fff;
   font-size: 25px;
 }

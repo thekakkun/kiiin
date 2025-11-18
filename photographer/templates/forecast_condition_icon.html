@@ -1,0 +1,78 @@
+{% match f.icon -%}
+  {%- when ForecastConditionIcon::Sunny -%}
+    {{ include_str!("../templates/img/wi-day-sunny.svg")|safe }}
+  {%- when ForecastConditionIcon::FewClouds -%}
+    {{ include_str!("../templates/img/wi-day-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::MixOfSunAndCloud -%}
+    {{ include_str!("../templates/img/wi-day-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::CloudyPeriods -%}
+    {{ include_str!("../templates/img/wi-day-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::IncreasingCloudiness -%}
+    {{ include_str!("../templates/img/wi-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::Clearing -%}
+    {{ include_str!("../templates/img/wi-day-sunny-overcast.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfShowers -%}
+    {{ include_str!("../templates/img/wi-day-showers.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfFlurriesOrRainShowers -%}
+    {{ include_str!("../templates/img/wi-day-rain-mix.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfFlurries -%}
+    {{ include_str!("../templates/img/wi-day-snow.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfThundershowers -%}
+    {{ include_str!("../templates/img/wi-day-thunderstorm.svg")|safe }}
+  {%- when ForecastConditionIcon::Cloudy -%}
+    {{ include_str!("../templates/img/wi-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::Showers -%}
+    {{ include_str!("../templates/img/wi-showers.svg")|safe }}
+  {%- when ForecastConditionIcon::PeriodsOfRain -%}
+    {{ include_str!("../templates/img/wi-rain.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfFreezingRain -%}
+    {{ include_str!("../templates/img/wi-rain-mix.svg")|safe }}
+  {%- when ForecastConditionIcon::RainShowersOrFlurries -%}
+    {{ include_str!("../templates/img/wi-rain-mix.svg")|safe }}
+  {%- when ForecastConditionIcon::Flurries -%}
+    {{ include_str!("../templates/img/wi-snow.svg")|safe }}
+  {%- when ForecastConditionIcon::PeriodsOfSnow -%}
+    {{ include_str!("../templates/img/wi-snow.svg")|safe }}
+  {%- when ForecastConditionIcon::Blizzard -%}
+    {{ include_str!("../templates/img/wi-snow-wind.svg")|safe }}
+  {%- when ForecastConditionIcon::ShowersOrThundershowers -%}
+    {{ include_str!("../templates/img/wi-thunderstorm.svg")|safe }}
+  {%- when ForecastConditionIcon::MixOfSunAndCloudNight -%}
+    {{ include_str!("../templates/img/wi-night-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::Haze -%}
+    {{ include_str!("../templates/img/wi-day-haze.svg")|safe }}
+  {%- when ForecastConditionIcon::Fog -%}
+    {{ include_str!("../templates/img/wi-fog.svg")|safe }}
+  {%- when ForecastConditionIcon::IcePellets -%}
+    {{ include_str!("../templates/img/wi-sleet.svg")|safe }}
+  {%- when ForecastConditionIcon::Drizzle -%}
+    {{ include_str!("../templates/img/wi-sprinkle.svg")|safe }}
+  {%- when ForecastConditionIcon::NotAvailable -%}
+    {{ include_str!("../templates/img/wi-na.svg")|safe }}
+  {%- when ForecastConditionIcon::Clear -%}
+    {{ include_str!("../templates/img/wi-night-clear.svg")|safe }}
+  {%- when ForecastConditionIcon::FewCloudsNight -%}
+    {{ include_str!("../templates/img/wi-night-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::CloudyPeriodsNight -%}
+    {{ include_str!("../templates/img/wi-night-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::CloudyNight -%}
+    {{ include_str!("../templates/img/wi-night-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::IncreasingCloudinessNight -%}
+    {{ include_str!("../templates/img/wi-night-cloudy.svg")|safe }}
+  {%- when ForecastConditionIcon::ClearingNight -%}
+    {{ include_str!("../templates/img/wi-night-clear.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfShowersNight -%}
+    {{ include_str!("../templates/img/wi-night-showers.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfFlurriesOrShowersNight -%}
+    {{ include_str!("../templates/img/wi-night-rain-mix.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfFlurriesNight -%}
+    {{ include_str!("../templates/img/wi-night-snow.svg")|safe }}
+  {%- when ForecastConditionIcon::ChanceOfThundershowersNight -%}
+    {{ include_str!("../templates/img/wi-night-thunderstorm.svg")|safe }}
+  {%- when ForecastConditionIcon::SnowAndBlowingSnow -%}
+    {{ include_str!("../templates/img/wi-snow-wind.svg")|safe }}
+  {%- when ForecastConditionIcon::Windy -%}
+    {{ include_str!("../templates/img/wi-strong-wind.svg")|safe }}
+  {%- when ForecastConditionIcon::Smoke -%}
+    {{ include_str!("../templates/img/wi-smoke.svg")|safe }}
+{%- endmatch %}

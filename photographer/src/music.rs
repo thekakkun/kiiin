@@ -5,7 +5,14 @@ use std::{env, error::Error};
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
-pub struct Song {
+pub(crate) struct SongChange {
+    pub current_song: Option<Song>,
+    pub album_art: Box<Option<AlbumArt>>,
+    pub next_song: Option<Song>,
+}
+
+#[derive(Debug)]
+pub(crate) struct Song {
     pub title: String,
     pub artist: String,
     pub album: String,
@@ -32,7 +39,7 @@ impl From<mpd::Song> for Song {
     }
 }
 
-pub type AlbumArt = Vec<u8>;
+pub(crate) type AlbumArt = Vec<u8>;
 
 fn init_mpd() -> Result<Client, Box<dyn Error>> {
     let mpd_host_pass = env::var("MPD_HOST").unwrap_or(String::from("localhost"));
@@ -56,7 +63,7 @@ fn init_mpd() -> Result<Client, Box<dyn Error>> {
     Ok(client)
 }
 
-pub fn monitor_mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
+pub(crate) fn monitor_mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
     let mut client = init_mpd()?;
     loop {
         if client
@@ -81,11 +88,11 @@ pub fn monitor_mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
                 next_song = client.playlistid(queue_place.id)?;
             }
 
-            let _ = tx.blocking_send(Event::Music(
-                current_song.map(Song::from),
-                Box::new(album_art),
-                next_song.map(Song::from),
-            ));
+            let _ = tx.blocking_send(Event::Music(SongChange {
+                current_song: current_song.map(Song::from),
+                album_art: Box::new(album_art),
+                next_song: next_song.map(Song::from),
+            }));
         }
     }
 }

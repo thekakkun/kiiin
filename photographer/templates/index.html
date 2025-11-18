@@ -12,6 +12,7 @@
       {% include "styles/reset.css" %}
       {% include "styles/layout.css" %}
       {% include "styles/music.css" %}
+      {% include "styles/weather.css" %}
     </style>
   </head>
 
@@ -19,6 +20,8 @@
     {% if let Some(music) = music %}
     <section id="music">{{ music | safe }}</section>
     {% endif %}
-    <section id="weather"></section>
+    {% if let Some(weather) = weather %}
+    <section id="weather">{{ weather | safe }}</section>
+    {% endif %}
   </body>
 </html>

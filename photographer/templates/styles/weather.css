@@ -1,0 +1,91 @@
+#weather {
+  display: flex;
+  flex-direction: column;
+
+  & .divider {
+    color: #444;
+  }
+
+  & .current {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+
+    & .icon {
+      display: flex;
+      align-items: center;
+      grid-column: 1 / -1;
+      grid-row: 1;
+
+      & svg {
+        display: block;
+        height: 100px;
+        width: auto;
+      }
+      & p {
+        font-size: 35px;
+        display: inline-block;
+      }
+    }
+
+    & .condition {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
+      align-items: center;
+
+      & p {
+        font-size: 120px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        & svg {
+          height: 120px;
+          width: auto;
+        }
+      }
+    }
+
+    & .today {
+      grid-column: 2;
+      grid-row: 2;
+      justify-self: end;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      li {
+        font-size: 50px;
+        list-style: none;
+        width: fit-content;
+      }
+    }
+  }
+
+  & .forecast {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    list-style: none;
+
+    & .hourly {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      & .temp-lop {
+        font-weight: 500;
+      }
+      & p {
+        font-size: 35px;
+      }
+
+      & svg {
+        width: 150px;
+      }
+    }
+  }
+}

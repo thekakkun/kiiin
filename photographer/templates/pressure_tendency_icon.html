@@ -1,0 +1,8 @@
+{% match condition.tendency -%}
+  {%- when PressureTendency::Rising -%}
+    {{ include_str!("../templates/img/wi-direction-up-right.svg")|safe }}
+  {%- when PressureTendency::Steady -%}
+    {{ include_str!("../templates/img/wi-direction-right.svg")|safe }}
+  {%- when PressureTendency::Falling -%}
+    {{ include_str!("../templates/img/wi-direction-down-right.svg")|safe }}
+{%- endmatch %}

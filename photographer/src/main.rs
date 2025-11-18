@@ -4,9 +4,9 @@ mod music;
 mod template;
 mod weather;
 
-use crate::music::monitor_mpd;
-use crate::music::{AlbumArt, Song};
+use crate::music::{SongChange, monitor_mpd};
 use crate::template::{KiiinTemplate, MusicTemplate};
+use crate::weather::{WeatherUpdate, monitor_weather};
 
 use image::{ImageReader, imageops::rotate90};
 use reqwest::Client;
@@ -21,8 +21,8 @@ pub const KINDLE_W: u16 = 1448;
 
 #[derive(Debug)]
 enum Event {
-    Music(Option<Song>, Box<Option<AlbumArt>>, Option<Song>),
-    Weather,
+    Music(SongChange),
+    Weather(WeatherUpdate),
 }
 
 // Processes image in path for Kindle
@@ -41,19 +41,30 @@ fn process_img(img: &NamedTempFile) {
 async fn main() -> Result<(), Box<dyn Error>> {
     let (tx, mut rx) = mpsc::channel(100);
 
+    let tx_weather = tx.clone();
     tokio::task::spawn_blocking(|| {
         if let Err(e) = monitor_mpd(tx) {
             eprintln!("MPD error: {}", e);
         };
     });
+    tokio::task::spawn(async move {
+        if let Err(e) = monitor_weather(tx_weather).await {
+            eprintln!("Weather error: {}", e);
+        }
+    });
 
-    let mut template = KiiinTemplate { music: None };
-    let mut refresh = false;
+    let mut template = KiiinTemplate {
+        music: None,
+        weather: None,
+    };
 
     while let Some(event) = rx.recv().await {
-        match event {
-            Event::Music(ref current_song, ref _album_art, ref _next_song) => {
-                refresh = matches!(
+        let refresh = match event {
+            Event::Music(SongChange {
+                ref current_song, ..
+            }) => {
+                println!("SongChange");
+                let refresh = matches!(
                     (&template.music, &current_song),
                     (
                         Some(MusicTemplate { current_song: Some(previous), .. }),
@@ -62,9 +73,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 );
 
                 template.music = Some(event.try_into()?);
+                refresh
             }
-            Event::Weather => println!("Got from weather"),
-        }
+            Event::Weather(weather_update) => {
+                println!("{:?}", weather_update);
+                template.weather = Some(weather_update);
+                true
+            }
+        };
 
         let dash_img = template.screenshot()?;
         process_img(&dash_img);

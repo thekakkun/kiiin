@@ -1,6 +1,7 @@
 use crate::{
     Event, KINDLE_H, KINDLE_W,
-    music::{AlbumArt, Song},
+    music::{AlbumArt, Song, SongChange},
+    weather::WeatherUpdate,
 };
 use askama::Template;
 use std::io::Write;
@@ -21,7 +22,12 @@ impl TryFrom<Event> for MusicTemplate {
     type Error = askama::Error;
 
     fn try_from(value: Event) -> Result<Self, Self::Error> {
-        if let Event::Music(current_song, album_art, next_song) = value {
+        if let Event::Music(SongChange {
+            current_song,
+            album_art,
+            next_song,
+        }) = value
+        {
             let data_uri = generate_uri(*album_art);
             Ok(Self {
                 current_song,
@@ -47,10 +53,13 @@ fn generate_uri(album_art: Option<AlbumArt>) -> Option<String> {
     }
 }
 
+type WeatherTemplate = WeatherUpdate;
+
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct KiiinTemplate {
     pub music: Option<MusicTemplate>,
+    pub weather: Option<WeatherTemplate>,
 }
 
 impl KiiinTemplate {
