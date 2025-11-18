@@ -51,7 +51,7 @@ impl From<SiteData> for WeatherUpdate {
                         .hourly_forecast_group
                         .hourly_forecast
                         .as_slice()
-                        .get(2_usize.pow(i))
+                        .get(2_usize.pow(i) - 1)
                         .map(|forecast| forecast.try_into().ok())
                 })
                 .collect(),
