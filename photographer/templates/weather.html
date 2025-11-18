@@ -33,7 +33,7 @@
   <ol class="forecast">
     {% for f in forecasts %}
     <li class="hourly">
-      <p class="time">{{ f.time.format("%H") }}</p>
+      <p class="time">{{ f.time.format("%l %p") }}</p>
       {% include "forecast_condition_icon.html" %}
       <p class="temp-lop">{{ f.temp_percip.temperature }}°C<span class="divider">/</span>{{ f.temp_percip.percipitation }}%</p>
     </li>

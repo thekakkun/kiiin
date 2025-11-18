@@ -1,4 +1,6 @@
 #music {
+  margin-top: 75px;
+
   & .track {
     & .title {
       font-weight: bold;

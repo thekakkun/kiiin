@@ -23,7 +23,7 @@
         width: auto;
       }
       & p {
-        font-size: 35px;
+        font-size: 50px;
         display: inline-block;
       }
     }
@@ -35,7 +35,7 @@
       align-items: center;
 
       & p {
-        font-size: 120px;
+        font-size: 100px;
         font-weight: 500;
         display: flex;
         align-items: center;
@@ -70,6 +70,7 @@
     flex-direction: row;
     justify-content: space-between;
     list-style: none;
+    margin-top: 40px;
 
     & .hourly {
       display: flex;

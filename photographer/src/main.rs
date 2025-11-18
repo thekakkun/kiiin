@@ -63,7 +63,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             Event::Music(SongChange {
                 ref current_song, ..
             }) => {
-                println!("SongChange");
                 let refresh = matches!(
                     (&template.music, &current_song),
                     (
@@ -76,7 +75,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 refresh
             }
             Event::Weather(weather_update) => {
-                println!("{:?}", weather_update);
                 template.weather = Some(weather_update);
                 true
             }

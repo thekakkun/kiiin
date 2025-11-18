@@ -17,11 +17,11 @@
   </head>
 
   <body>
-    {% if let Some(music) = music %}
-    <section id="music">{{ music | safe }}</section>
-    {% endif %}
     {% if let Some(weather) = weather %}
     <section id="weather">{{ weather | safe }}</section>
+    {% endif %}
+    {% if let Some(music) = music %}
+    <section id="music">{{ music | safe }}</section>
     {% endif %}
   </body>
 </html>
