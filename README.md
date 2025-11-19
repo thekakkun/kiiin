@@ -1,6 +1,6 @@
 # kiiin
 
-<img width="2040" height="1536" alt="image" src="https://github.com/user-attachments/assets/cdeaff42-6546-48be-8c72-81f58a247ad3" />
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/cdeaff42-6546-48be-8c72-81f58a247ad3" />
 
 ## What is it?
 
