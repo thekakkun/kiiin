@@ -14,7 +14,8 @@ kiiin consists of two main services:
 
 - [frame](frame/):
 
-  Runs on the Kindle. A server that displays any image sent to the endpoint.
+  Runs on the Kindle. Provides an endpoint where you can send images to be
+  displayed on-screen.
 
 - [photographer](photographer/):
 
