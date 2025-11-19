@@ -18,8 +18,9 @@ kiiin consists of two main services:
 
 - [photographer](photographer/):
 
-  Runs on some machine. Detects changes in MPD playback status or weather forecast updates. Renders the dashboard html, takes a screenshot with Firefox, and
-  sends it to the Kindle.
+  Runs on some machine. Detects changes in MPD playback status or weather
+  forecast updates. Renders the dashboard html, takes a screenshot with Firefox,
+  and sends it to the Kindle.
 
 ## Attributions
 
