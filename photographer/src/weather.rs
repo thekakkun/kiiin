@@ -97,12 +97,12 @@ impl TryFrom<&SiteData> for Condition {
 }
 
 #[derive(Debug)]
-pub(crate) struct TempPercipForecast {
+pub(crate) struct TempPrecipForecast {
     pub temperature: f64,
-    pub percipitation: u8,
+    pub precipitation: u8,
 }
 
-impl TryFrom<&CityForecast> for TempPercipForecast {
+impl TryFrom<&CityForecast> for TempPrecipForecast {
     type Error = &'static str;
 
     fn try_from(value: &CityForecast) -> Result<Self, Self::Error> {
@@ -120,7 +120,7 @@ impl TryFrom<&CityForecast> for TempPercipForecast {
                 AbbreviatedForecast {
                     pop:
                         Pop {
-                            value: percipitation,
+                            value: precipitation,
                             ..
                         },
                     ..
@@ -130,16 +130,16 @@ impl TryFrom<&CityForecast> for TempPercipForecast {
         {
             Ok(Self {
                 temperature: *temperature,
-                percipitation: *percipitation,
+                precipitation: *precipitation,
             })
         } else {
-            Err("temperature or percipitation chance missing.")
+            Err("temperature or precipitation chance missing.")
         }
     }
 }
 
 #[derive(Debug)]
-pub(crate) struct Today(Option<TempPercipForecast>, Option<TempPercipForecast>);
+pub(crate) struct Today(Option<TempPrecipForecast>, Option<TempPrecipForecast>);
 
 impl TryFrom<&SiteData> for Today {
     type Error = &'static str;
@@ -175,7 +175,7 @@ impl TryFrom<&SiteData> for Today {
 pub(crate) struct Forecast {
     pub time: DateTime<Tz>,
     pub icon: ForecastConditionIcon,
-    pub temp_percip: TempPercipForecast,
+    pub temp_precip: TempPrecipForecast,
 }
 
 impl TryFrom<&HourlyForecast> for Forecast {
@@ -190,7 +190,7 @@ impl TryFrom<&HourlyForecast> for Forecast {
                 value: temperature, ..
             },
             lop: LopHourly {
-                value: percipitation,
+                value: precipitation,
                 ..
             },
             date_time_utc: Some(date_time_utc),
@@ -200,9 +200,9 @@ impl TryFrom<&HourlyForecast> for Forecast {
             Ok(Self {
                 time: date_time_utc.with_timezone(&Canada::Eastern),
                 icon: *icon,
-                temp_percip: TempPercipForecast {
+                temp_precip: TempPrecipForecast {
                     temperature: *temperature,
-                    percipitation: *percipitation,
+                    precipitation: *precipitation,
                 },
             })
         } else {
@@ -220,8 +220,11 @@ pub(crate) async fn monitor_weather(tx: mpsc::Sender<Event>) -> Result<(), Box<d
                     let response = reqwest::get(url).await?;
                     let xml_str = response.text().await?;
 
-                    if let Ok(site_data) = from_str::<SiteData>(&xml_str) {
-                        let _ = tx.send(Event::Weather(site_data.into())).await;
+                    if let Ok(site_data) = from_str::<SiteData>(&xml_str)
+                        && tx.send(Event::Weather(site_data.into())).await.is_err()
+                    {
+                        eprintln!("Weather channel closed");
+                        return Ok(());
                     }
                 }
                 Err(e) => {

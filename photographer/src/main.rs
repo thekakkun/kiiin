@@ -59,19 +59,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     while let Some(event) = rx.recv().await {
-        let refresh = match event {
+        let mut refresh = false;
+        match event {
             Event::Music(music_update) => {
-                let previous_album = template.music.and_then(|m| m.current_song.map(|s| s.album));
-                let next_album = music_update.current_song.clone().map(|s| s.album);
+                let previous_album = template
+                    .music
+                    .as_ref()
+                    .and_then(|m| m.current_song.as_ref().map(|s| &s.album));
+                let next_album = music_update.current_song.as_ref().map(|s| &s.album);
+                refresh = previous_album != next_album;
 
                 template.music = Some(music_update);
-
-                previous_album != next_album
             }
             Event::Weather(weather_update) => {
                 template.weather = Some(weather_update);
-
-                false
             }
         };
 

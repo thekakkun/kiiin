@@ -17,12 +17,12 @@
     {% if let Some(today) = today %}
     <ul class="today">
       {% if let Some(day) = today.0 %}
-      <li>{{ day.temperature }}°C <span class="divider">/</span> {{ day.percipitation }}%</li>
+      <li>{{ day.temperature }}°C <span class="divider">/</span> {{ day.precipitation }}%</li>
       {% else %}
       <li>-</li>
       {% endif %}
       {% if let Some(night) = today.1 %}
-      <li>{{ night.temperature }}°C <span class="divider">/</span> {{ night.percipitation }}%</li>
+      <li>{{ night.temperature }}°C <span class="divider">/</span> {{ night.precipitation }}%</li>
       {% else %}
       <li>-</li>
       {% endif %}
@@ -35,7 +35,7 @@
     <li class="hourly">
       <p class="time">{{ f.time.format("%l %p") }}</p>
       {% include "forecast_condition_icon.html" %}
-      <p class="temp-lop">{{ f.temp_percip.temperature }}°C <span class="divider">/</span> {{ f.temp_percip.percipitation }}%</p>
+      <p class="temp-lop">{{ f.temp_precip.temperature }}°C <span class="divider">/</span> {{ f.temp_precip.precipitation }}%</p>
     </li>
     {% endfor %}
   </ol>

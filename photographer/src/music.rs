@@ -13,10 +13,8 @@ pub(crate) struct MusicUpdate {
     pub next_song: Option<Song>,
 }
 
-impl TryFrom<&mut Client> for MusicUpdate {
-    type Error = Box<dyn Error>;
-
-    fn try_from(client: &mut Client) -> Result<Self, Self::Error> {
+impl MusicUpdate {
+    pub fn fetch(client: &mut Client) -> Result<Self, Box<dyn Error>> {
         let status = client.status()?;
 
         let mut current_song = None;
@@ -104,14 +102,23 @@ fn init_mpd() -> Result<Client, Box<dyn Error>> {
 
 pub(crate) fn monitor_mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
     let mut client = init_mpd()?;
-    let _ = tx.blocking_send(Event::Music((&mut client).try_into()?));
+    if tx
+        .blocking_send(Event::Music(MusicUpdate::fetch(&mut client)?))
+        .is_err()
+    {
+        return Ok(());
+    }
 
     loop {
         if client
             .wait(&[mpd::Subsystem::Player, mpd::Subsystem::Playlist])
             .is_ok()
+            && tx
+                .blocking_send(Event::Music(MusicUpdate::fetch(&mut client)?))
+                .is_err()
         {
-            let _ = tx.blocking_send(Event::Music((&mut client).try_into()?));
+            eprintln!("MPD channel closed");
+            return Ok(());
         }
     }
 }
