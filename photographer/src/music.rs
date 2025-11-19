@@ -13,6 +13,45 @@ pub(crate) struct MusicUpdate {
     pub next_song: Option<Song>,
 }
 
+impl TryFrom<&mut Client> for MusicUpdate {
+    type Error = Box<dyn Error>;
+
+    fn try_from(client: &mut Client) -> Result<Self, Self::Error> {
+        let status = client.status()?;
+
+        let mut current_song = None;
+        let mut album_art = None;
+        let mut next_song = None;
+
+        if let Some(queue_place) = status.song {
+            current_song = client.playlistid(queue_place.id)?;
+
+            if let Some(ref song) = current_song {
+                album_art = match client.albumart(&song).ok() {
+                    Some(art) => {
+                        let mime = infer::get(&art)
+                            .map(|t| t.mime_type())
+                            .unwrap_or("image/png");
+                        let base64_data = STANDARD.encode(art);
+                        Some(format!("data:{};base64,{}", mime, base64_data))
+                    }
+                    None => None,
+                }
+            }
+        }
+
+        if let Some(queue_place) = status.nextsong {
+            next_song = client.playlistid(queue_place.id)?;
+        }
+
+        Ok(Self {
+            current_song: current_song.map(Song::from),
+            album_art,
+            next_song: next_song.map(Song::from),
+        })
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct Song {
     pub title: String,
@@ -65,43 +104,14 @@ fn init_mpd() -> Result<Client, Box<dyn Error>> {
 
 pub(crate) fn monitor_mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
     let mut client = init_mpd()?;
+    let _ = tx.blocking_send(Event::Music((&mut client).try_into()?));
+
     loop {
         if client
             .wait(&[mpd::Subsystem::Player, mpd::Subsystem::Playlist])
             .is_ok()
         {
-            let status = client.status()?;
-
-            let mut current_song = None;
-            let mut album_art = None;
-            let mut next_song = None;
-
-            if let Some(queue_place) = status.song {
-                current_song = client.playlistid(queue_place.id)?;
-
-                if let Some(ref song) = current_song {
-                    album_art = match client.albumart(&song).ok() {
-                        Some(art) => {
-                            let mime = infer::get(&art)
-                                .map(|t| t.mime_type())
-                                .unwrap_or("image/png");
-                            let base64_data = STANDARD.encode(art);
-                            Some(format!("data:{};base64,{}", mime, base64_data))
-                        }
-                        None => None,
-                    }
-                }
-            }
-
-            if let Some(queue_place) = status.nextsong {
-                next_song = client.playlistid(queue_place.id)?;
-            }
-
-            let _ = tx.blocking_send(Event::Music(MusicUpdate {
-                current_song: current_song.map(Song::from),
-                album_art,
-                next_song: next_song.map(Song::from),
-            }));
+            let _ = tx.blocking_send(Event::Music((&mut client).try_into()?));
         }
     }
 }
