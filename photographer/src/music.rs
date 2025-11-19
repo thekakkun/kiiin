@@ -1,17 +1,19 @@
 use crate::Event;
+use askama::Template;
+use base64::{Engine, engine::general_purpose::STANDARD};
 use mpd::{Client, Idle};
-
 use std::{env, error::Error};
 use tokio::sync::mpsc;
 
-#[derive(Debug)]
-pub(crate) struct SongChange {
+#[derive(Debug, Template, Clone)]
+#[template(path = "music.html")]
+pub(crate) struct MusicUpdate {
     pub current_song: Option<Song>,
-    pub album_art: Box<Option<AlbumArt>>,
+    pub album_art: Option<String>,
     pub next_song: Option<Song>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Song {
     pub title: String,
     pub artist: String,
@@ -38,8 +40,6 @@ impl From<mpd::Song> for Song {
         }
     }
 }
-
-pub(crate) type AlbumArt = Vec<u8>;
 
 fn init_mpd() -> Result<Client, Box<dyn Error>> {
     let mpd_host_pass = env::var("MPD_HOST").unwrap_or(String::from("localhost"));
@@ -80,7 +80,16 @@ pub(crate) fn monitor_mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>>
                 current_song = client.playlistid(queue_place.id)?;
 
                 if let Some(ref song) = current_song {
-                    album_art = client.albumart(&song).ok();
+                    album_art = match client.albumart(&song).ok() {
+                        Some(art) => {
+                            let mime = infer::get(&art)
+                                .map(|t| t.mime_type())
+                                .unwrap_or("image/png");
+                            let base64_data = STANDARD.encode(art);
+                            Some(format!("data:{};base64,{}", mime, base64_data))
+                        }
+                        None => None,
+                    }
                 }
             }
 
@@ -88,9 +97,9 @@ pub(crate) fn monitor_mpd(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>>
                 next_song = client.playlistid(queue_place.id)?;
             }
 
-            let _ = tx.blocking_send(Event::Music(SongChange {
+            let _ = tx.blocking_send(Event::Music(MusicUpdate {
                 current_song: current_song.map(Song::from),
-                album_art: Box::new(album_art),
+                album_art,
                 next_song: next_song.map(Song::from),
             }));
         }

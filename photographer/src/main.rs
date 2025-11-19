@@ -4,8 +4,8 @@ mod music;
 mod template;
 mod weather;
 
-use crate::music::{SongChange, monitor_mpd};
-use crate::template::{KiiinTemplate, MusicTemplate};
+use crate::music::{MusicUpdate, monitor_mpd};
+use crate::template::KiiinTemplate;
 use crate::weather::{WeatherUpdate, monitor_weather};
 
 use image::{ImageReader, imageops::rotate90};
@@ -21,7 +21,7 @@ pub const KINDLE_W: u16 = 1448;
 
 #[derive(Debug)]
 enum Event {
-    Music(SongChange),
+    Music(MusicUpdate),
     Weather(WeatherUpdate),
 }
 
@@ -60,23 +60,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     while let Some(event) = rx.recv().await {
         let refresh = match event {
-            Event::Music(SongChange {
-                ref current_song, ..
-            }) => {
-                let refresh = matches!(
-                    (&template.music, &current_song),
-                    (
-                        Some(MusicTemplate { current_song: Some(previous), .. }),
-                        Some(current)
-                    ) if previous.album != current.album
-                );
+            Event::Music(music_update) => {
+                let previous_album = template.music.and_then(|m| m.current_song.map(|s| s.album));
+                let next_album = music_update.current_song.clone().map(|s| s.album);
 
-                template.music = Some(event.try_into()?);
-                refresh
+                template.music = Some(music_update);
+
+                previous_album != next_album
             }
             Event::Weather(weather_update) => {
                 template.weather = Some(weather_update);
-                true
+
+                false
             }
         };
 

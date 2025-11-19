@@ -213,19 +213,22 @@ impl TryFrom<&HourlyForecast> for Forecast {
 
 pub(crate) async fn monitor_weather(tx: mpsc::Sender<Event>) -> Result<(), Box<dyn Error>> {
     let mut stream = CityPageStream::new(Ontario::Toronto, Language::English).await?;
+    loop {
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(url) => {
+                    let response = reqwest::get(url).await?;
+                    let xml_str = response.text().await?;
 
-    while let Some(result) = stream.next().await {
-        match result {
-            Ok(url) => {
-                let response = reqwest::get(url).await?;
-                let xml_str = response.text().await?;
-
-                if let Ok(site_data) = from_str::<SiteData>(&xml_str) {
-                    let _ = tx.send(Event::Weather(site_data.into())).await;
+                    if let Ok(site_data) = from_str::<SiteData>(&xml_str) {
+                        let _ = tx.send(Event::Weather(site_data.into())).await;
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Stream error: {}", e);
+                    stream = CityPageStream::new(Ontario::Toronto, Language::English).await?;
                 }
             }
-            Err(e) => eprintln!("Stream error: {}", e),
         }
     }
-    Ok(())
 }

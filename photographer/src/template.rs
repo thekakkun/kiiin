@@ -1,65 +1,15 @@
-use crate::{
-    Event, KINDLE_H, KINDLE_W,
-    music::{AlbumArt, Song, SongChange},
-    weather::WeatherUpdate,
-};
+use crate::{KINDLE_H, KINDLE_W, music::MusicUpdate, weather::WeatherUpdate};
 use askama::Template;
 use std::io::Write;
 
-use base64::{Engine, engine::general_purpose::STANDARD};
 use std::{env, error::Error, process::Command};
 use tempfile::{Builder, NamedTempFile};
 
 #[derive(Template)]
-#[template(path = "music.html")]
-pub struct MusicTemplate {
-    pub current_song: Option<Song>,
-    pub album_art: Option<String>,
-    pub next_song: Option<Song>,
-}
-
-impl TryFrom<Event> for MusicTemplate {
-    type Error = askama::Error;
-
-    fn try_from(value: Event) -> Result<Self, Self::Error> {
-        if let Event::Music(SongChange {
-            current_song,
-            album_art,
-            next_song,
-        }) = value
-        {
-            let data_uri = generate_uri(*album_art);
-            Ok(Self {
-                current_song,
-                album_art: data_uri,
-                next_song,
-            })
-        } else {
-            Err(askama::Error::ValueType)
-        }
-    }
-}
-
-fn generate_uri(album_art: Option<AlbumArt>) -> Option<String> {
-    match album_art {
-        Some(art) => {
-            let mime = infer::get(&art)
-                .map(|t| t.mime_type())
-                .unwrap_or("image/png");
-            let base64_data = STANDARD.encode(art);
-            Some(format!("data:{};base64,{}", mime, base64_data))
-        }
-        None => None,
-    }
-}
-
-type WeatherTemplate = WeatherUpdate;
-
-#[derive(Template)]
 #[template(path = "index.html")]
 pub struct KiiinTemplate {
-    pub music: Option<MusicTemplate>,
-    pub weather: Option<WeatherTemplate>,
+    pub music: Option<MusicUpdate>,
+    pub weather: Option<WeatherUpdate>,
 }
 
 impl KiiinTemplate {
