@@ -1,6 +1,6 @@
 # kiiin
 
-<img width="500" alt="image" src="https://github.com/user-attachments/assets/cdeaff42-6546-48be-8c72-81f58a247ad3" />
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/4e09d76a-a807-4efc-aa3b-de5749ea60c5" />
 
 ## What is it?
 
@@ -14,14 +14,15 @@ kiiin consists of two main services:
 
 - [frame](frame/):
 
-  Runs on the Kindle. Provides an endpoint where you can send images to be
-  displayed on-screen.
+  This is a server that runs on the kindle. Its main functionality is to display
+  any images received on-screen.
 
 - [photographer](photographer/):
 
-  Runs on some machine. Detects changes in MPD playback status or weather
-  forecast updates. Renders the dashboard html, takes a screenshot with Firefox,
-  and sends it to the Kindle.
+  This service can run on any machine. When it detects changes to MPD playback
+  status or receives weather updates, it re-renders the dashboard image. This is
+  done by taking a screenshot with headless Firefox and sending it to the
+  Kindle.
 
 ## Attributions
 
