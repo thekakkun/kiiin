@@ -14,18 +14,29 @@
       </p>
     </div>
     {% endif %}
+    
     {% if let Some(today) = today %}
     <ul class="today">
-      {% if let Some(day) = today.0 %}
-      <li>AM: {{ day.temperature }}°C <span class="divider">/</span> {{ day.precipitation }}%</li>
-      {% else %}
-      <li>-</li>
-      {% endif %}
-      {% if let Some(night) = today.1 %}
-      <li>PM: {{ night.temperature }}°C <span class="divider">/</span> {{ night.precipitation }}%</li>
-      {% else %}
-      <li>-</li>
-      {% endif %}
+      <li>
+        <span class="label">AM:</span>
+        <span class="value">
+          {% if let Some(day) = today.0 %}
+            {{ day.temperature }}°C <span class="divider">/</span> {{ day.precipitation }}%
+          {% else %}
+            -
+          {% endif %}
+        </span>
+      </li>
+      <li>
+        <span class="label">PM:</span>
+        <span class="value">
+          {% if let Some(night) = today.1 %}
+            {{ night.temperature }}°C <span class="divider">/</span> {{ night.precipitation }}%
+          {% else %}
+            -
+          {% endif %}
+        </span>
+      </li>
     </ul>
     {% endif %}
   </div>

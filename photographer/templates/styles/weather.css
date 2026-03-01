@@ -52,19 +52,27 @@
       grid-column: 2;
       grid-row: 2;
       justify-self: end;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: auto 1fr;
       justify-content: center;
-      align-items: center;
+      align-content: center;
+      gap: 0.3em;
 
       li {
         font-size: 50px;
         list-style: none;
-        width: fit-content;
+        display: contents;
+      }
+
+      .label {
+        text-align: right;
+      }
+
+      .value {
+        text-align: left;
       }
     }
   }
-
   & .forecast {
     display: flex;
     flex-direction: row;
