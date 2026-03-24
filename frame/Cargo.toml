@@ -3,6 +3,9 @@ name = "kiiin_frame"
 version = "0.1.0"
 edition = "2024"
 
+[package.metadata.cross.build]
+default-target = "armv7-unknown-linux-musleabihf"
+
 [dependencies]
 axum = { version = "0.8.4", features = ["multipart"] }
 image = "0.25.6"
