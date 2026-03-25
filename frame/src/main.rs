@@ -23,7 +23,7 @@ async fn main() {
 }
 
 async fn check() -> &'static str {
-    "Hello, World!"
+    "OK"
 }
 
 async fn handle_text(body: String) -> StatusCode {
@@ -59,8 +59,8 @@ async fn handle_image(mut multipart: Multipart) -> StatusCode {
     };
 
     match img_format {
-        ImageFormat::Bmp => eips_cmd.args(["-b", "image"]),
-        ImageFormat::Png => eips_cmd.args(["-g", "image"]),
+        ImageFormat::Bmp => eips_cmd.args(["-b", "/mnt/us/image"]),
+        ImageFormat::Png => eips_cmd.args(["-g", "/mnt/us/image"]),
         _ => return StatusCode::INTERNAL_SERVER_ERROR,
     };
     match eips_cmd.output() {
@@ -70,7 +70,7 @@ async fn handle_image(mut multipart: Multipart) -> StatusCode {
 }
 
 async fn save_image(field: Field<'_>) -> Result<ImageFormat, StatusCode> {
-    let dir = env::var("DIR").unwrap_or("/mnt/us/extensions/kiiin_frame".to_string());
+    let dir = env::var("DIR").unwrap_or("/mnt/us/".to_string());
     let img_format = match field.content_type() {
         Some("image/bmp") => ImageFormat::Bmp,
         Some("image/png") => ImageFormat::Png,
