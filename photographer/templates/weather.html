@@ -5,7 +5,7 @@
         {% include "current_condition_icon.html" %}
         <p>{{ icon }}
         {% if let Some(t) = time %}
-          ({{ t.format("%I:%M %p") }})
+          {{ t.format("(%-I:%M %p, %B %-e, %Y)") }}
         {% endif %}
         </p>
 

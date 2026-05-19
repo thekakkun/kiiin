@@ -15,19 +15,18 @@ pub struct KiiinTemplate {
 impl KiiinTemplate {
     pub fn screenshot(&self) -> Result<NamedTempFile, Box<dyn Error>> {
         let rendered = self.render()?;
-
-        let profile = env::var("FIREFOX_PROFILE").ok();
-
         let mut dash_file = NamedTempFile::new()?;
         write!(dash_file, "{}", rendered)?;
 
-        let dash_img = Builder::new().suffix(".png").tempfile().unwrap();
-
         let mut command = Command::new("firefox");
         command.arg("--headless");
+
+        let profile = env::var("FIREFOX_PROFILE").ok();
         if let Some(p) = profile {
             command.args(["-P", &p]);
         }
+
+        let dash_img = Builder::new().suffix(".png").tempfile().unwrap();
         command.args([
             "--screenshot",
             dash_img.path().to_str().unwrap(),
