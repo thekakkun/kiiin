@@ -1,10 +1,15 @@
 <section id="weather">
   <div class="current">
     {% if let Some(icon) = icon %}
-    <div class="icon">
-      {% include "current_condition_icon.html" %}
-      <p>{{ icon }}</p>
-    </div>
+      <div class="icon">
+        {% include "current_condition_icon.html" %}
+        <p>{{ icon }}
+        {% if let Some(t) = time %}
+          ({{ t.format("%I:%M %p") }})
+        {% endif %}
+        </p>
+
+      </div>
     {% endif %}
     {% if let Some(condition) = condition %}
     <div class="condition">
@@ -14,7 +19,7 @@
       </p>
     </div>
     {% endif %}
-    
+
     {% if let Some(today) = today %}
     <ul class="today">
       <li>

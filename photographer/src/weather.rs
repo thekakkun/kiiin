@@ -29,6 +29,7 @@ use crate::Event;
 #[template(path = "weather.html")]
 #[derive(Debug)]
 pub(crate) struct WeatherUpdate {
+    pub time: Option<DateTime<Tz>>,
     pub icon: Option<CurrentConditionIcon>,
     pub condition: Option<Condition>,
     pub today: Option<Today>,
@@ -38,6 +39,7 @@ pub(crate) struct WeatherUpdate {
 impl From<SiteData> for WeatherUpdate {
     fn from(value: SiteData) -> Self {
         Self {
+            time: value.date_times.1.clone().try_into().ok(),
             icon: value
                 .current_conditions
                 .icon_code
