@@ -2,7 +2,7 @@ body {
   height: 1027px;
   width: 1448px;
   padding: 20px;
-  font-family: monospace;
+  font-family: "IBM Plex Sans", monospace;
 }
 
 .arrow text {

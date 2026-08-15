@@ -18,6 +18,7 @@
 body {
   line-height: 1;
   -webkit-font-smoothing: antialiased;
+  background-color: #fff;
 }
 
 img,
